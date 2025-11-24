@@ -1,3 +1,4 @@
+// src/components/prescription/PrescriptionModule.tsx
 import { useState } from "react";
 import { Medication } from "../../types";
 import { Patient } from "../../types";
@@ -149,139 +150,165 @@ const PrescriptionModule: React.FC<{
           </button>
         </div>
 
-        <div className="space-y-2">
-          {medications.map((medication, index) => (
-            <div
-              key={medication.id}
-              className="border border-gray-200 rounded-md p-2 bg-[#F8F9FA]"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium text-md text-[#0B2D4D]">
-                  Med {index + 1}
-                </h4>
-                {medications.length > 1 && (
-                  <button
-                    onClick={() => removeMedication(medication.id)}
-                    className="p-1 text-red-500 hover:text-red-700"
+        {/* 🟢 MODIFIED: Table structure with single header */}
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <table className="w-full min-w-[700px]">
+            <thead className="bg-gray-100 border-b border-gray-200">
+              <tr className="text-xs uppercase text-gray-600">
+                <th className="text-left p-2 w-[20%] font-semibold">Name</th>
+                <th className="text-left p-2 w-[15%] font-semibold">Dosage</th>
+                <th className="text-left p-2 w-[15%] font-semibold">
+                  Frequency
+                </th>
+                <th className="text-left p-2 w-[15%] font-semibold">
+                  Duration
+                </th>
+                <th className="text-left p-2 w-[30%] font-semibold">
+                  Instructions
+                </th>
+                <th className="text-center p-2 w-[5%] font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {medications.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center p-4 text-gray-500 text-sm"
                   >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-5 gap-2">
-                <div>
-                  <label className="block text-md font-medium text-[#1a4b7a] mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    list={`medications-${medication.id}`}
-                    value={medication.name}
-                    onChange={(e) =>
-                      updateMedication(medication.id, "name", e.target.value)
-                    }
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                    placeholder="Medication"
-                  />
-                  <datalist id={`medications-${medication.id}`}>
-                    {commonMedications.map((med) => (
-                      <option key={med} value={med} />
-                    ))}
-                  </datalist>
-                </div>
-
-                <div>
-                  <label className="block text-md font-medium text-[#1a4b7a] mb-1">
-                    Dosage
-                  </label>
-                  <input
-                    type="text"
-                    list={`dosage-${medication.id}`}
-                    value={medication.dosage}
-                    onChange={(e) =>
-                      updateMedication(medication.id, "dosage", e.target.value)
-                    }
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                    placeholder="500mg"
-                  />
-                  <datalist id={`dosage-${medication.id}`}>
-                    {dosageOptions.map((dose) => (
-                      <option key={dose} value={dose} />
-                    ))}
-                  </datalist>
-                </div>
-
-                <div>
-                  <label className="block text-md font-medium text-[#1a4b7a] mb-1">
-                    Frequency
-                  </label>
-                  <select
-                    value={medication.frequency}
-                    onChange={(e) =>
-                      updateMedication(
-                        medication.id,
-                        "frequency",
-                        e.target.value
-                      )
-                    }
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
+                    No medications added. Click 'Add' to start prescription.
+                  </td>
+                </tr>
+              ) : (
+                medications.map((medication) => (
+                  <tr
+                    key={medication.id}
+                    className="hover:bg-blue-50/50 transition-colors"
                   >
-                    <option value="">Select</option>
-                    {frequencyOptions.map((freq) => (
-                      <option key={freq} value={freq}>
-                        {freq}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    {/* Name */}
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        list={`medications-${medication.id}`}
+                        value={medication.name}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "name",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
+                        placeholder="Medication"
+                      />
+                      <datalist id={`medications-${medication.id}`}>
+                        {commonMedications.map((med) => (
+                          <option key={med} value={med} />
+                        ))}
+                      </datalist>
+                    </td>
 
-                <div>
-                  <label className="block text-md font-medium text-[#1a4b7a] mb-1">
-                    Duration
-                  </label>
-                  <select
-                    value={medication.duration}
-                    onChange={(e) =>
-                      updateMedication(
-                        medication.id,
-                        "duration",
-                        e.target.value
-                      )
-                    }
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                  >
-                    <option value="">Select</option>
-                    {durationOptions.map((dur) => (
-                      <option key={dur} value={dur}>
-                        {dur}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    {/* Dosage */}
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        list={`dosage-${medication.id}`}
+                        value={medication.dosage}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "dosage",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
+                        placeholder="500mg"
+                      />
+                      <datalist id={`dosage-${medication.id}`}>
+                        {dosageOptions.map((dose) => (
+                          <option key={dose} value={dose} />
+                        ))}
+                      </datalist>
+                    </td>
 
-                <div>
-                  <label className="block text-md font-medium text-[#1a4b7a] mb-1">
-                    Instructions
-                  </label>
-                  <input
-                    type="text"
-                    value={medication.instructions}
-                    onChange={(e) =>
-                      updateMedication(
-                        medication.id,
-                        "instructions",
-                        e.target.value
-                      )
-                    }
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                    placeholder="After meals"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
+                    {/* Frequency */}
+                    <td className="p-2">
+                      <select
+                        value={medication.frequency}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "frequency",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
+                      >
+                        <option value="">Select</option>
+                        {frequencyOptions.map((freq) => (
+                          <option key={freq} value={freq}>
+                            {freq}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Duration */}
+                    <td className="p-2">
+                      <select
+                        value={medication.duration}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "duration",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
+                      >
+                        <option value="">Select</option>
+                        {durationOptions.map((dur) => (
+                          <option key={dur} value={dur}>
+                            {dur}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
+                    {/* Instructions */}
+                    <td className="p-2">
+                      <input
+                        type="text"
+                        value={medication.instructions}
+                        onChange={(e) =>
+                          updateMedication(
+                            medication.id,
+                            "instructions",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
+                        placeholder="After meals"
+                      />
+                    </td>
+
+                    {/* Action */}
+                    <td className="p-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeMedication(medication.id)}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+        {/* 🟢 END MODIFIED: Table structure */}
       </div>
 
       {/* Advice and Diet Row */}
