@@ -1,3 +1,4 @@
+// src/contexts/PrescriptionContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from "react";
 import { Medication } from "../types";
 
@@ -28,7 +29,7 @@ export const PrescriptionProvider: React.FC<{ children: ReactNode }> = ({
 
   const addMedications = (newMedications: Omit<Medication, "id">[]) => {
     const formattedNewMeds = newMedications.map((med, index) => ({
-      ...med,
+      ...med, // This spreads 'source', 'name', etc.
       id: `${Date.now()}-${medications.length + index}`,
     }));
 

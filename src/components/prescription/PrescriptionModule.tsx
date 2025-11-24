@@ -1,11 +1,7 @@
 // src/components/prescription/PrescriptionModule.tsx
-import { useState } from "react";
-import { Medication } from "../../types";
-import { Patient } from "../../types";
-import { FileText, X } from "lucide-react"; // Added X
-import { Plus } from "lucide-react";
-import { Trash2 } from "lucide-react";
-import { Bot } from "lucide-react";
+import React, { useState } from "react";
+import { Medication, Patient } from "../../types";
+import { FileText, X, Plus, Trash2, Bot } from "lucide-react";
 import { usePrescription } from "../../contexts/PrescriptionContext";
 
 const PrescriptionModule: React.FC<{
@@ -24,7 +20,7 @@ const PrescriptionModule: React.FC<{
     },
   });
 
-  // ✅ NEW: State for the custom diet input
+  // Custom diet input state
   const [customDiet, setCustomDiet] = useState("");
 
   const commonMedications = [
@@ -85,6 +81,7 @@ const PrescriptionModule: React.FC<{
         frequency: "",
         duration: "",
         instructions: "",
+        source: "doctor", // <--- DEFAULT SOURCE
       },
     ]);
   };
@@ -105,16 +102,12 @@ const PrescriptionModule: React.FC<{
     );
   };
 
-  // ✅ START: --- NEW DIET HANDLERS ---
-
-  // For quick-add chips
   const addQuickDietPlan = (plan: string) => {
     if (!advice.diet.includes(plan)) {
       setAdvice((prev) => ({ ...prev, diet: [...prev.diet, plan] }));
     }
   };
 
-  // For adding from the custom input field
   const handleAddCustomDiet = () => {
     const newAdvice = customDiet.trim();
     if (newAdvice && !advice.diet.includes(newAdvice)) {
@@ -122,18 +115,24 @@ const PrescriptionModule: React.FC<{
         ...prev,
         diet: [...prev.diet, newAdvice],
       }));
-      setCustomDiet(""); // Clear input after adding
+      setCustomDiet("");
     }
   };
 
-  // For deleting any chip from the added list
   const handleRemoveDiet = (plan: string) => {
     setAdvice((prev) => ({
       ...prev,
       diet: prev.diet.filter((d) => d !== plan),
     }));
   };
-  // ✅ END: --- NEW DIET HANDLERS ---
+
+  // Helper for row styling
+  const getRowClass = (source: "ai" | "doctor") => {
+    if (source === "ai") {
+      return "bg-purple-100 hover:bg-purple-200 border-l-4 border-purple-600 transition-colors";
+    }
+    return "bg-green-100 hover:bg-green-200 border-l-4 border-green-600 transition-colors";
+  };
 
   return (
     <div className="space-y-3">
@@ -150,7 +149,6 @@ const PrescriptionModule: React.FC<{
           </button>
         </div>
 
-        {/* 🟢 MODIFIED: Table structure with single header */}
         <div className="overflow-x-auto border border-gray-200 rounded-lg">
           <table className="w-full min-w-[700px]">
             <thead className="bg-gray-100 border-b border-gray-200">
@@ -180,140 +178,134 @@ const PrescriptionModule: React.FC<{
                   </td>
                 </tr>
               ) : (
-                medications.map((medication) => (
-                  <tr
-                    key={medication.id}
-                    className="hover:bg-blue-50/50 transition-colors"
-                  >
-                    {/* Name */}
-                    <td className="p-2">
-                      <input
-                        type="text"
-                        list={`medications-${medication.id}`}
-                        value={medication.name}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "name",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                        placeholder="Medication"
-                      />
-                      <datalist id={`medications-${medication.id}`}>
-                        {commonMedications.map((med) => (
-                          <option key={med} value={med} />
-                        ))}
-                      </datalist>
-                    </td>
+                medications.map((medication) => {
+                  const focusRingClass =
+                    medication.source === "ai"
+                      ? "focus:ring-purple-500 focus:border-purple-500"
+                      : "focus:ring-green-500 focus:border-green-500";
 
-                    {/* Dosage */}
-                    <td className="p-2">
-                      <input
-                        type="text"
-                        list={`dosage-${medication.id}`}
-                        value={medication.dosage}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "dosage",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                        placeholder="500mg"
-                      />
-                      <datalist id={`dosage-${medication.id}`}>
-                        {dosageOptions.map((dose) => (
-                          <option key={dose} value={dose} />
-                        ))}
-                      </datalist>
-                    </td>
-
-                    {/* Frequency */}
-                    <td className="p-2">
-                      <select
-                        value={medication.frequency}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "frequency",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                      >
-                        <option value="">Select</option>
-                        {frequencyOptions.map((freq) => (
-                          <option key={freq} value={freq}>
-                            {freq}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-
-                    {/* Duration */}
-                    <td className="p-2">
-                      <select
-                        value={medication.duration}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "duration",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                      >
-                        <option value="">Select</option>
-                        {durationOptions.map((dur) => (
-                          <option key={dur} value={dur}>
-                            {dur}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-
-                    {/* Instructions */}
-                    <td className="p-2">
-                      <input
-                        type="text"
-                        value={medication.instructions}
-                        onChange={(e) =>
-                          updateMedication(
-                            medication.id,
-                            "instructions",
-                            e.target.value
-                          )
-                        }
-                        className="w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
-                        placeholder="After meals"
-                      />
-                    </td>
-
-                    {/* Action */}
-                    <td className="p-2 text-center">
-                      <button
-                        type="button"
-                        onClick={() => removeMedication(medication.id)}
-                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                  return (
+                    <tr
+                      key={medication.id}
+                      className={getRowClass(medication.source)}
+                    >
+                      <td className="p-2">
+                        <input
+                          type="text"
+                          list={`medications-${medication.id}`}
+                          value={medication.name}
+                          onChange={(e) =>
+                            updateMedication(
+                              medication.id,
+                              "name",
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 text-gray-900 bg-white ${focusRingClass}`}
+                          placeholder="Medication"
+                        />
+                        <datalist id={`medications-${medication.id}`}>
+                          {commonMedications.map((med) => (
+                            <option key={med} value={med} />
+                          ))}
+                        </datalist>
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="text"
+                          list={`dosage-${medication.id}`}
+                          value={medication.dosage}
+                          onChange={(e) =>
+                            updateMedication(
+                              medication.id,
+                              "dosage",
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 text-gray-900 bg-white ${focusRingClass}`}
+                          placeholder="500mg"
+                        />
+                        <datalist id={`dosage-${medication.id}`}>
+                          {dosageOptions.map((dose) => (
+                            <option key={dose} value={dose} />
+                          ))}
+                        </datalist>
+                      </td>
+                      <td className="p-2">
+                        <select
+                          value={medication.frequency}
+                          onChange={(e) =>
+                            updateMedication(
+                              medication.id,
+                              "frequency",
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 text-gray-900 bg-white ${focusRingClass}`}
+                        >
+                          <option value="">Select</option>
+                          {frequencyOptions.map((freq) => (
+                            <option key={freq} value={freq}>
+                              {freq}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="p-2">
+                        <select
+                          value={medication.duration}
+                          onChange={(e) =>
+                            updateMedication(
+                              medication.id,
+                              "duration",
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 text-gray-900 bg-white ${focusRingClass}`}
+                        >
+                          <option value="">Select</option>
+                          {durationOptions.map((dur) => (
+                            <option key={dur} value={dur}>
+                              {dur}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="p-2">
+                        <input
+                          type="text"
+                          value={medication.instructions}
+                          onChange={(e) =>
+                            updateMedication(
+                              medication.id,
+                              "instructions",
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-2 py-1 border border-gray-300 rounded-md focus:ring-1 text-gray-900 bg-white ${focusRingClass}`}
+                          placeholder="After meals"
+                        />
+                      </td>
+                      <td className="p-2 text-center">
+                        <button
+                          onClick={() => removeMedication(medication.id)}
+                          className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-        {/* 🟢 END MODIFIED: Table structure */}
       </div>
 
       {/* Advice and Diet Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* General Advice Section */}
+        {/* General Advice */}
         <div className="bg-white rounded-lg border border-gray-200 p-3">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-[#0B2D4D]">
@@ -327,10 +319,7 @@ const PrescriptionModule: React.FC<{
           <textarea
             value={advice.general}
             onChange={(e) =>
-              setAdvice((prev) => ({
-                ...prev,
-                general: e.target.value,
-              }))
+              setAdvice((prev) => ({ ...prev, general: e.target.value }))
             }
             className="w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md resize-none"
             rows={4}
@@ -338,13 +327,11 @@ const PrescriptionModule: React.FC<{
           />
         </div>
 
-        {/* ✅ START: UPDATED DIET PLAN SECTION */}
+        {/* Diet Plan */}
         <div className="bg-white rounded-lg border border-gray-200 p-3">
           <h3 className="text-lg font-semibold text-[#0B2D4D] mb-2">
             Diet Plan
           </h3>
-
-          {/* Quick Add Chips */}
           <div className="flex flex-wrap gap-2 mb-4 p-2 border border-gray-100 rounded-md bg-[#F8F9FA]">
             {dietPlans.map((plan) => {
               const isSelected = advice.diet.includes(plan);
@@ -353,7 +340,7 @@ const PrescriptionModule: React.FC<{
                   key={plan}
                   type="button"
                   onClick={() => addQuickDietPlan(plan)}
-                  disabled={isSelected} // Disable if already added
+                  disabled={isSelected}
                   className={`px-3 py-1 text-xs rounded-full border transition-all duration-150 text-left bg-white text-gray-700 border-gray-300 hover:bg-gray-200 disabled:opacity-50 disabled:bg-green-100 disabled:text-green-800`}
                 >
                   {isSelected ? "✓ " : "+ "}
@@ -362,14 +349,12 @@ const PrescriptionModule: React.FC<{
               );
             })}
           </div>
-
-          {/* Custom Diet Plan Input */}
           <div className="flex items-stretch gap-2 mb-4">
             <input
               type="text"
               value={customDiet}
               onChange={(e) => setCustomDiet(e.target.value)}
-              placeholder="Enter custom diet advice (e.g., Gluten-Free)"
+              placeholder="Enter custom diet advice..."
               className="flex-grow px-3 py-1.5 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-sm"
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
@@ -386,8 +371,6 @@ const PrescriptionModule: React.FC<{
               Add Custom
             </button>
           </div>
-
-          {/* Added Diet Plans (as deletable chips) */}
           <div className="space-y-2">
             <h4 className="text-md font-medium text-[#1a4b7a] mb-1">
               Selected Diet Advice:
@@ -417,7 +400,6 @@ const PrescriptionModule: React.FC<{
             )}
           </div>
         </div>
-        {/* ✅ END: UPDATED DIET PLAN SECTION */}
       </div>
 
       {/* Follow-up Section */}
@@ -433,17 +415,13 @@ const PrescriptionModule: React.FC<{
               onChange={(e) =>
                 setAdvice((prev) => ({
                   ...prev,
-                  followUp: {
-                    ...prev.followUp,
-                    enabled: e.target.checked,
-                  },
+                  followUp: { ...prev.followUp, enabled: e.target.checked },
                 }))
               }
               className="w-3 h-3 text-[#012e58] border-gray-300 rounded focus:ring-[#1a4b7a]"
             />
             <span className="text-md text-[#1a4b7a]">Schedule follow-up</span>
           </label>
-
           {advice.followUp.enabled && (
             <>
               <input
@@ -453,10 +431,7 @@ const PrescriptionModule: React.FC<{
                 onChange={(e) =>
                   setAdvice((prev) => ({
                     ...prev,
-                    followUp: {
-                      ...prev.followUp,
-                      duration: e.target.value,
-                    },
+                    followUp: { ...prev.followUp, duration: e.target.value },
                   }))
                 }
                 className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#1a4b7a] focus:border-transparent text-md"
@@ -486,4 +461,5 @@ const PrescriptionModule: React.FC<{
     </div>
   );
 };
+
 export default PrescriptionModule;
