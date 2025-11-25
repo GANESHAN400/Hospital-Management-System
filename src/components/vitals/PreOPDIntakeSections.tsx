@@ -18,7 +18,6 @@ import {
   Eye,
   EyeOff,
   ClipboardCopy,
-  Clock,
   FileText,
 } from "lucide-react";
 import {
@@ -29,7 +28,7 @@ import {
   PastHistory,
 } from "../../types";
 
-// --- CONSTANTS & MOCK DATA (Extracted from PreOPDIntake.tsx) ---
+// --- CONSTANTS & MOCK DATA ---
 export const MOCK_MASTERS = {
   complaints: [
     { label: "Chest Pain", redFlag: true, specialty: "Cardiology" },
@@ -76,7 +75,7 @@ export const MOCK_MASTERS = {
 export const InputStyle =
   "p-2 border border-gray-300 rounded-md w-full bg-white focus:ring-2 focus:ring-[#012e58] focus:border-[#012e58] transition duration-200 ease-in-out text-[#0B2D4D] placeholder:text-gray-500 text-lg";
 
-// Helper component for section headers to maintain consistency
+// Helper component for section headers
 export const SectionHeader: React.FC<{
   icon: React.ElementType;
   title: string;
@@ -89,7 +88,7 @@ export const SectionHeader: React.FC<{
   </div>
 );
 
-// Formatted AI Summary renderer (headings, bullets, key: value)
+// Formatted AI Summary renderer
 const FormattedAiSummary: React.FC<{ summary: string }> = ({ summary }) => {
   const lines = summary.split("\n").filter((line) => line.trim() !== "");
   return (
@@ -138,7 +137,7 @@ const FormattedAiSummary: React.FC<{ summary: string }> = ({ summary }) => {
   );
 };
 
-// Presenting Complaints Section
+// --- 1. Presenting Complaints Section ---
 interface PresentingComplaintsSectionProps {
   data: Complaint[];
   onChange: (data: Complaint[]) => void;
@@ -148,7 +147,7 @@ export const PresentingComplaintsSection: React.FC<
   PresentingComplaintsSectionProps
 > = ({ data, onChange }) => {
   const addComplaint = () => {
-    if (data.length >= 5) return; // Max 5 complaints
+    if (data.length >= 5) return;
     onChange([
       ...data,
       {
@@ -167,7 +166,6 @@ export const PresentingComplaintsSection: React.FC<
       data.map((c) => {
         if (c.id === id) {
           const updated = { ...c, [field]: value };
-          // Auto-derive specialty and red flag
           const masterComplaint = MOCK_MASTERS.complaints.find(
             (m) => m.label.toLowerCase() === updated.complaint.toLowerCase()
           );
@@ -217,7 +215,7 @@ export const PresentingComplaintsSection: React.FC<
           </div>
         ) : (
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            {/* --- COMMON HEADER ROW --- */}
+            {/* Header Row */}
             <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-gray-100 border-b border-gray-200 font-semibold text-[#0B2D4D] text-sm uppercase tracking-wide">
               <div className="col-span-4">Chief Complaint</div>
               <div className="col-span-2">Severity</div>
@@ -226,12 +224,11 @@ export const PresentingComplaintsSection: React.FC<
               <div className="col-span-1 text-center">Action</div>
             </div>
 
-            {/* --- DATA ROWS --- */}
+            {/* Data Rows */}
             <div className="bg-gray-50 divide-y divide-gray-200">
               {data.map((complaint) => (
                 <div key={complaint.id} className="p-4">
                   <div className="grid grid-cols-12 gap-3 items-center">
-                    {/* Complaint Input */}
                     <div className="col-span-4">
                       <input
                         type="text"
@@ -253,8 +250,6 @@ export const PresentingComplaintsSection: React.FC<
                         ))}
                       </datalist>
                     </div>
-
-                    {/* Severity Dropdown */}
                     <div className="col-span-2">
                       <select
                         value={complaint.severity}
@@ -275,8 +270,6 @@ export const PresentingComplaintsSection: React.FC<
                         ))}
                       </select>
                     </div>
-
-                    {/* Duration Inputs */}
                     <div className="col-span-3">
                       <div className="flex space-x-1">
                         <input
@@ -310,15 +303,11 @@ export const PresentingComplaintsSection: React.FC<
                         </select>
                       </div>
                     </div>
-
-                    {/* Specialty (Auto-derived) */}
                     <div className="col-span-2">
                       <div className="p-2 bg-gray-100 border border-gray-200 rounded-md text-lg text-gray-700 truncate">
                         {complaint.specialty || "Auto"}
                       </div>
                     </div>
-
-                    {/* Delete Action */}
                     <div className="col-span-1 flex justify-center">
                       <button
                         onClick={() => removeComplaint(complaint.id)}
@@ -328,8 +317,6 @@ export const PresentingComplaintsSection: React.FC<
                       </button>
                     </div>
                   </div>
-
-                  {/* Red Flag Alert Row */}
                   {complaint.redFlagTriggered && (
                     <div className="mt-2 flex items-center bg-red-100 text-red-800 p-2 rounded-md text-lg font-semibold">
                       <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -347,7 +334,7 @@ export const PresentingComplaintsSection: React.FC<
   );
 };
 
-// Chronic Conditions Section with Enhanced Features
+// --- 2. Chronic Conditions Section ---
 interface ChronicConditionsSectionProps {
   data: ChronicCondition[];
   onChange: (data: ChronicCondition[]) => void;
@@ -396,7 +383,6 @@ export const ChronicConditionsSection: React.FC<
       compliance: "Unknown",
       notes: "",
     };
-
     updateCondition(conditionId, {
       medications: [
         ...(data.find((c) => c.id === conditionId)?.medications || []),
@@ -429,14 +415,13 @@ export const ChronicConditionsSection: React.FC<
     }
   };
 
-  // Check for uncontrolled conditions based on medications
   const getUncontrolledWarning = (condition: ChronicCondition) => {
     if (
       (condition.name.toLowerCase().includes("diabetes") ||
         condition.name.toLowerCase().includes("hypertension")) &&
       condition.medications.length === 0
     ) {
-      return "⚠️ No medications recorded - suggests possible poor control or unmanaged condition.";
+      return "⚠️ No medications recorded - suggests possible poor control.";
     }
     return null;
   };
@@ -462,7 +447,6 @@ export const ChronicConditionsSection: React.FC<
       </div>
 
       <div className="p-4">
-        {/* Quick Add from Master List */}
         {showAddForm && (
           <div className="mb-4 p-3 border border-blue-200 rounded-lg bg-blue-50">
             <h4 className="font-medium text-[#0B2D4D] mb-2">
@@ -503,7 +487,6 @@ export const ChronicConditionsSection: React.FC<
           </div>
         )}
 
-        {/* Condition Cards */}
         {data.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <HeartPulse className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -524,7 +507,6 @@ export const ChronicConditionsSection: React.FC<
                     isExpanded ? "border-blue-300 shadow-md" : "border-gray-200"
                   }`}
                 >
-                  {/* Condition Header */}
                   <div
                     className={`p-4 cursor-pointer ${
                       isExpanded ? "bg-blue-50" : "bg-gray-50 hover:bg-gray-100"
@@ -571,12 +553,9 @@ export const ChronicConditionsSection: React.FC<
                     </div>
                   </div>
 
-                  {/* Expanded Content */}
                   {isExpanded && (
                     <div className="p-4 border-t border-gray-200 bg-white">
-                      {/* Condition Details */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        {/* DURATION LOGIC */}
                         <div>
                           <label className="block text-lg font-medium text-gray-700 mb-1">
                             Duration
@@ -599,8 +578,6 @@ export const ChronicConditionsSection: React.FC<
                             <option value="Unknown">Unknown</option>
                             <option value="Custom">Custom Duration</option>
                           </select>
-
-                          {/* Custom Duration Inputs */}
                           {isCustomDuration && (
                             <div className="flex space-x-2 mt-2 animate-fade-in">
                               <div className="flex-1">
@@ -650,7 +627,6 @@ export const ChronicConditionsSection: React.FC<
                             </div>
                           )}
                         </div>
-
                         <div>
                           <label className="block text-lg font-medium text-gray-700 mb-1">
                             On Medication
@@ -669,7 +645,6 @@ export const ChronicConditionsSection: React.FC<
                             <option value="No">No</option>
                           </select>
                         </div>
-
                         <div className="flex flex-col justify-end">
                           <button
                             onClick={() =>
@@ -683,7 +658,6 @@ export const ChronicConditionsSection: React.FC<
                         </div>
                       </div>
 
-                      {/* Notes / Custom Field */}
                       <div className="mb-4">
                         <label className="block text-lg font-medium text-gray-700 mb-1 flex items-center gap-2">
                           <FileText className="w-4 h-4 text-gray-500" />
@@ -693,7 +667,6 @@ export const ChronicConditionsSection: React.FC<
                           placeholder="Add notes, severity, or other details..."
                           className="w-full p-2 border border-gray-300 rounded-md text-lg focus:ring-2 focus:ring-[#012e58] focus:border-[#012e58]"
                           rows={2}
-                          // NOTE: Assuming 'notes' might be added to the type later. Casting to any to avoid TS error if property missing.
                           value={(condition as any).notes || ""}
                           onChange={(e) =>
                             updateCondition(condition.id, {
@@ -703,7 +676,6 @@ export const ChronicConditionsSection: React.FC<
                         />
                       </div>
 
-                      {/* Uncontrolled Warning */}
                       {uncontrolledWarning && (
                         <div className="mb-4 p-3 bg-orange-100 border border-orange-200 rounded-md">
                           <p className="text-lg text-orange-800">
@@ -712,7 +684,6 @@ export const ChronicConditionsSection: React.FC<
                         </div>
                       )}
 
-                      {/* Medications Table */}
                       {condition.medications.length > 0 && (
                         <div className="border border-gray-200 rounded-lg overflow-hidden">
                           <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
@@ -886,7 +857,7 @@ export const ChronicConditionsSection: React.FC<
   );
 };
 
-// Allergies Section
+// --- 3. Allergies Section ---
 interface AllergiesSectionProps {
   data: Allergy;
   onChange: (data: Allergy) => void;
@@ -912,13 +883,11 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
     onChange({ ...data, type: newTypes });
   };
 
-  // Check for drug conflicts
   const drugConflicts = useMemo(() => {
     if (!data.hasAllergies || !data.type.includes("Drug") || !data.substance) {
       return [];
     }
     const allergySubstance = data.substance.toLowerCase();
-    // Simple mock conflict check: checks if the substance is part of any medication name
     return allMeds.filter((med) =>
       med.name.toLowerCase().includes(allergySubstance)
     );
@@ -959,7 +928,6 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
       </div>
 
       <div className="p-4">
-        {/* REPLACED CHECKBOX WITH YES/NO BUTTONS */}
         <div className="mb-4">
           <p className="text-lg font-medium text-[#0B2D4D] mb-2">
             Does the patient have known allergies?
@@ -992,7 +960,6 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
 
         {isExpanded && data.hasAllergies && (
           <div className="space-y-4 pt-3 border-t border-gray-200">
-            {/* Drug Conflict Banner */}
             {drugConflicts.length > 0 && (
               <div className="flex items-start bg-red-100 text-red-800 p-3 rounded-md border border-red-200">
                 <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
@@ -1010,7 +977,6 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Allergy Types */}
               <div>
                 <label className="block text-lg font-medium text-gray-700 mb-2">
                   Allergy Type(s)
@@ -1032,8 +998,6 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
                   ))}
                 </div>
               </div>
-
-              {/* Substance */}
               <div>
                 <label className="block text-lg font-medium text-gray-700 mb-2">
                   Substance/Allergen
@@ -1051,7 +1015,6 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Reaction */}
               <div>
                 <label className="block text-lg font-medium text-gray-700 mb-2">
                   Reaction Description
@@ -1070,8 +1033,6 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
                   {data.reaction.length}/160 characters
                 </p>
               </div>
-
-              {/* Severity */}
               <div>
                 <label className="block text-lg font-medium text-gray-700 mb-2">
                   Severity Level
@@ -1105,7 +1066,7 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
   );
 };
 
-// Past History Section (Simplified)
+// --- 4. Past History Section ---
 interface PastHistorySectionProps {
   data: PastHistory;
   onChange: (data: PastHistory) => void;
@@ -1118,7 +1079,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
   chronicMeds,
 }) => {
   const copyFromChronic = () => {
-    // Merge, avoiding duplicates
     const newMeds = [...data.currentMedications];
     chronicMeds.forEach((chronicMed) => {
       if (!newMeds.some((med) => med.name === chronicMed.name)) {
@@ -1139,7 +1099,7 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
         ...data,
         illnesses: [...data.illnesses, newIllness],
       });
-      return true; // Indicates success
+      return true;
     }
     return false;
   };
@@ -1150,8 +1110,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
       illnesses: data.illnesses.filter((i) => i !== illness),
     });
   };
-
-  // --- NEW MEDICATION HANDLERS ---
 
   const handleAddMedicationRow = () => {
     const newMedication: MedicationDetails = {
@@ -1190,7 +1148,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
     );
     onChange({ ...data, currentMedications: updatedMeds });
   };
-  // --- END NEW MEDICATION HANDLERS ---
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -1204,7 +1161,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
       </div>
 
       <div className="p-4 space-y-6">
-        {/* Past History Items as Chips */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">
@@ -1240,7 +1196,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
               disabled={data.illnesses.length >= 5}
             />
           </div>
-
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">
               Past Surgeries
@@ -1261,7 +1216,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
               placeholder="Surgery name + year (e.g., Appy 2020)"
             />
           </div>
-
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-2">
               Past Hospitalizations
@@ -1284,7 +1238,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
           </div>
         </div>
 
-        {/* Current Medications */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
@@ -1304,7 +1257,6 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
             )}
           </div>
 
-          {/* === START: NEW MEDICATION TABLE === */}
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <datalist id="medication-list">
               {MOCK_MASTERS.medications.map((med) => (
@@ -1445,10 +1397,8 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
               <span>Add Medication Row</span>
             </button>
           </div>
-          {/* === END: NEW MEDICATION TABLE === */}
         </div>
 
-        {/* Overall Compliance */}
         <div>
           <label className="block text-lg font-medium text-gray-700 mb-2">
             Overall Medication Compliance
@@ -1472,7 +1422,7 @@ export const PastHistorySection: React.FC<PastHistorySectionProps> = ({
   );
 };
 
-// Records Upload Section with MOCK Upload/OCR Logic
+// --- 5. Records Upload Section ---
 interface RecordsUploadSectionProps {
   extractTextFromFile: (file: File) => Promise<string>;
   onRecordsChange: (records: Record<string, string>) => void;
@@ -1501,7 +1451,6 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
     other: [],
   });
 
-  // Local state to store the extracted text content per file, categorized by tab.
   const [extractedContents, setExtractedContents] = useState<
     Record<string, string>
   >({});
@@ -1527,9 +1476,7 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
     setIsProcessing(true);
 
     try {
-      // 1. Extract text using the passed-in logic (handles PDF/DOCX/Image OCR)
       const textContent = await extractTextFromFile(file);
-
       const newFile = {
         id: Date.now().toString(),
         name: file.name,
@@ -1537,7 +1484,6 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
         size: file.size,
       };
 
-      // 2. Update the file list state
       setUploadedFiles((prev) => {
         const newUploadedFiles = {
           ...prev,
@@ -1546,7 +1492,6 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
         return newUploadedFiles;
       });
 
-      // 3. Update the extracted contents state
       const newExtractedContents = {
         ...extractedContents,
         [activeTab]:
@@ -1560,7 +1505,6 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
       alert(`File processing failed: ${(error as Error).message}`);
     } finally {
       setIsProcessing(false);
-      // Clear the input value so the onChange event fires again if the user selects the same file
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -1568,8 +1512,6 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
   };
 
   const removeFile = (categoryId: string, fileId: string) => {
-    // NOTE: For simplicity, removing a file clears ALL extracted content in that category.
-    // A robust solution would track content per file ID.
     setUploadedFiles((prev) => ({
       ...prev,
       [categoryId]: prev[categoryId].filter((file) => file.id !== fileId),
@@ -1577,7 +1519,7 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
 
     setExtractedContents((prev) => ({
       ...prev,
-      [categoryId]: "", // Clear all extracted text for this category
+      [categoryId]: "",
     }));
     onRecordsChange({
       ...extractedContents,
@@ -1599,19 +1541,14 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
       </div>
 
       <div className="p-4">
-        {/* Hidden file input */}
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
           className="hidden"
-          // 💡 UPDATED ACCEPT FOR OCR/EXTRACTION
           accept=".pdf,.docx,.txt,image/*"
-          // To allow multiple files, uncomment the 'multiple' attribute:
-          // multiple
         />
 
-        {/* Category Tabs */}
         <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-200">
           {categories.map((category) => {
             const fileCount = uploadedFiles[category.id]?.length || 0;
@@ -1637,96 +1574,86 @@ export const RecordsUploadSection: React.FC<RecordsUploadSectionProps> = ({
           })}
         </div>
 
-        {/* Upload Area */}
-        <div className="mb-4">
-          <div
-            className={`border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 transition-colors cursor-pointer ${
-              isProcessing ? "bg-blue-100" : "hover:bg-gray-100"
-            }`}
-            onClick={!isProcessing ? triggerFileUpload : undefined}
-          >
-            {isProcessing ? (
-              <div className="flex flex-col items-center">
-                <Loader className="w-8 h-8 text-[#012e58] mx-auto mb-2 animate-spin" />
-                <p className="text-lg text-[#012e58] mb-1 font-medium">
-                  Processing File...
-                </p>
-                <p className="text-md text-gray-500">
-                  Extracting text content (OCR/Embedded)
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-lg text-gray-600 mb-2 font-medium">
-                  Upload {categories.find((c) => c.id === activeTab)?.label}{" "}
-                  files
-                </p>
-                <p className="text-md text-gray-500 mb-3">
-                  Drag and drop or **click to browse** • PDF, DOCX, JPG, PNG
-                </p>
-                <div className="px-4 py-2 bg-[#012e58] text-white rounded-md hover:bg-[#1a4b7a] transition-colors text-lg inline-block">
-                  Browse Files
+        <div
+          className={`${
+            currentFileCount > 0 ? "grid grid-cols-1 lg:grid-cols-2 gap-6" : ""
+          }`}
+        >
+          <div className="mb-4">
+            <div
+              className={`border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 transition-colors cursor-pointer ${
+                isProcessing ? "bg-blue-100" : "hover:bg-gray-100"
+              }`}
+              onClick={!isProcessing ? triggerFileUpload : undefined}
+            >
+              {isProcessing ? (
+                <div className="flex flex-col items-center">
+                  <Loader className="w-8 h-8 text-[#012e58] mx-auto mb-2 animate-spin" />
+                  <p className="text-lg text-[#012e58] mb-1 font-medium">
+                    Processing File...
+                  </p>
+                  <p className="text-md text-gray-500">
+                    Extracting text content (OCR/Embedded)
+                  </p>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Uploaded Files */}
-        {currentFileCount > 0 && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-[#0B2D4D]">
-              Uploaded Files ({currentFileCount})
-            </h4>
-            {uploadedFiles[activeTab]?.map((file) => (
-              <div
-                key={file.id}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="text-2xl">📄</div>
-                  <div>
-                    <p className="text-lg font-medium text-[#0B2D4D]">
-                      {file.name}
-                    </p>
-                    <p className="text-md text-gray-500">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-lg text-gray-600 mb-2 font-medium">
+                    Upload {categories.find((c) => c.id === activeTab)?.label}{" "}
+                    files
+                  </p>
+                  <p className="text-md text-gray-500 mb-3">
+                    Drag and drop or **click to browse** • PDF, DOCX, JPG, PNG
+                  </p>
+                  <div className="px-4 py-2 bg-[#012e58] text-white rounded-md hover:bg-[#1a4b7a] transition-colors text-lg inline-block">
+                    Browse Files
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => removeFile(activeTab, file.id)}
-                    className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {/* Text Preview Box (New addition for feedback) */}
-            <div className="mt-4 p-3 bg-gray-100 border border-gray-200 rounded-lg">
-              <h5 className="text-md font-semibold text-[#0B2D4D] mb-2">
-                Extracted Content Preview (Last Upload)
-              </h5>
-              <p className="text-md text-gray-600 whitespace-pre-wrap max-h-40 overflow-y-auto">
-                {extractedContents[activeTab]
-                  ?.split("\n\n")
-                  .pop()
-                  ?.substring(0, 500) ||
-                  "No text extracted yet for the last file."}
-              </p>
+              )}
             </div>
           </div>
-        )}
+
+          {currentFileCount > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-[#0B2D4D]">
+                Uploaded Files ({currentFileCount})
+              </h4>
+              {uploadedFiles[activeTab]?.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="text-2xl">📄</div>
+                    <div>
+                      <p className="text-lg font-medium text-[#0B2D4D]">
+                        {file.name}
+                      </p>
+                      <p className="text-md text-gray-500">
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => removeFile(activeTab, file.id)}
+                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-// AI Clinical Summary Section
+// --- 6. AI Clinical Summary Section ---
 interface AiClinicalSummarySectionProps {
   summary: string;
   isLoading: boolean;
@@ -1740,7 +1667,6 @@ export const AiClinicalSummarySection: React.FC<
 > = ({ summary, isLoading, isExpanded, onToggleExpand, onGenerate }) => {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(summary);
-    // Could add a toast notification here
   };
 
   return (
@@ -1832,10 +1758,7 @@ export const AiClinicalSummarySection: React.FC<
   );
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// 💡 NEW: Previous Medical History Summary Section (Section 8)
-// ---------------------------------------------------------------------------------------------------------------------
-
+// --- 7. Previous Medical History Summary Section ---
 export interface PreviousMedicalHistorySummarySectionProps {
   summary: string;
   isLoading: boolean;
