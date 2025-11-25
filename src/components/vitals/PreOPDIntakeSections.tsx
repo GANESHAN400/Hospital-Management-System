@@ -214,137 +214,130 @@ export const PresentingComplaintsSection: React.FC<
             <p className="text-lg">Click "Add Complaint" to start</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {data.map((complaint) => (
-              <div
-                key={complaint.id}
-                className="p-4 border border-gray-200 rounded-lg bg-gray-50"
-              >
-                <div className="grid grid-cols-12 gap-3 items-end">
-                  {/* Complaint */}
-                  <div className="col-span-4">
-                    <label className="block text-md font-medium text-gray-600 mb-1">
-                      Chief Complaint
-                    </label>
-                    <input
-                      type="text"
-                      list={`complaint-list-${complaint.id}`}
-                      value={complaint.complaint}
-                      onChange={(e) =>
-                        updateComplaint(
-                          complaint.id,
-                          "complaint",
-                          e.target.value
-                        )
-                      }
-                      className={InputStyle}
-                      placeholder="e.g., Chest Pain"
-                    />
-                    <datalist id={`complaint-list-${complaint.id}`}>
-                      {MOCK_MASTERS.complaints.map((m) => (
-                        <option key={m.label} value={m.label} />
-                      ))}
-                    </datalist>
-                  </div>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {/* --- COMMON HEADER ROW --- */}
+            <div className="grid grid-cols-12 gap-3 px-4 py-3 bg-gray-100 border-b border-gray-200 font-semibold text-[#0B2D4D] text-sm uppercase tracking-wide">
+              <div className="col-span-4">Chief Complaint</div>
+              <div className="col-span-2">Severity</div>
+              <div className="col-span-3">Duration</div>
+              <div className="col-span-2">Specialty</div>
+              <div className="col-span-1 text-center">Action</div>
+            </div>
 
-                  {/* Severity */}
-                  <div className="col-span-2">
-                    <label className="block text-md font-medium text-gray-600 mb-1">
-                      Severity
-                    </label>
-                    <select
-                      value={complaint.severity}
-                      onChange={(e) =>
-                        updateComplaint(
-                          complaint.id,
-                          "severity",
-                          e.target.value
-                        )
-                      }
-                      className={InputStyle}
-                    >
-                      <option value="">Select</option>
-                      {MOCK_MASTERS.severity.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Duration */}
-                  <div className="col-span-3">
-                    <label className="block text-md font-medium text-gray-600 mb-1">
-                      Duration
-                    </label>
-                    <div className="flex space-x-1">
+            {/* --- DATA ROWS --- */}
+            <div className="bg-gray-50 divide-y divide-gray-200">
+              {data.map((complaint) => (
+                <div key={complaint.id} className="p-4">
+                  <div className="grid grid-cols-12 gap-3 items-center">
+                    {/* Complaint Input */}
+                    <div className="col-span-4">
                       <input
-                        type="number"
-                        min="1"
-                        value={complaint.duration.value}
+                        type="text"
+                        list={`complaint-list-${complaint.id}`}
+                        value={complaint.complaint}
                         onChange={(e) =>
-                          updateComplaint(complaint.id, "duration", {
-                            ...complaint.duration,
-                            value: e.target.value,
-                          })
+                          updateComplaint(
+                            complaint.id,
+                            "complaint",
+                            e.target.value
+                          )
                         }
-                        // FIX: Ensure numerical input takes 2/3 space
-                        className={`${InputStyle} w-2/3`}
-                        placeholder="3"
+                        className={InputStyle}
+                        placeholder="e.g., Chest Pain"
                       />
+                      <datalist id={`complaint-list-${complaint.id}`}>
+                        {MOCK_MASTERS.complaints.map((m) => (
+                          <option key={m.label} value={m.label} />
+                        ))}
+                      </datalist>
+                    </div>
+
+                    {/* Severity Dropdown */}
+                    <div className="col-span-2">
                       <select
-                        value={complaint.duration.unit}
+                        value={complaint.severity}
                         onChange={(e) =>
-                          updateComplaint(complaint.id, "duration", {
-                            ...complaint.duration,
-                            unit: e.target.value as any,
-                          })
+                          updateComplaint(
+                            complaint.id,
+                            "severity",
+                            e.target.value
+                          )
                         }
-                        // FIX: Ensure unit selection takes 1/3 space
-                        className={`${InputStyle} w-1/3`}
+                        className={InputStyle}
                       >
-                        <option value="h">hrs</option>
-                        <option value="d">days</option>
-                        <option value="w">wks</option>
-                        <option value="mo">mos</option>
-                        <option value="yr">yrs</option>
+                        <option value="">Select</option>
+                        {MOCK_MASTERS.severity.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
                       </select>
                     </div>
-                  </div>
 
-                  {/* Specialty (Auto-derived) */}
-                  <div className="col-span-2">
-                    <label className="block text-md font-medium text-gray-600 mb-1">
-                      Specialty
-                    </label>
-                    <div className="p-2 bg-gray-100 border border-gray-200 rounded-md text-lg text-gray-700">
-                      {complaint.specialty || "Auto-derived"}
+                    {/* Duration Inputs */}
+                    <div className="col-span-3">
+                      <div className="flex space-x-1">
+                        <input
+                          type="number"
+                          min="1"
+                          value={complaint.duration.value}
+                          onChange={(e) =>
+                            updateComplaint(complaint.id, "duration", {
+                              ...complaint.duration,
+                              value: e.target.value,
+                            })
+                          }
+                          className={`${InputStyle} w-2/3`}
+                          placeholder="3"
+                        />
+                        <select
+                          value={complaint.duration.unit}
+                          onChange={(e) =>
+                            updateComplaint(complaint.id, "duration", {
+                              ...complaint.duration,
+                              unit: e.target.value as any,
+                            })
+                          }
+                          className={`${InputStyle} w-1/3`}
+                        >
+                          <option value="h">hrs</option>
+                          <option value="d">days</option>
+                          <option value="w">wks</option>
+                          <option value="mo">mos</option>
+                          <option value="yr">yrs</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Specialty (Auto-derived) */}
+                    <div className="col-span-2">
+                      <div className="p-2 bg-gray-100 border border-gray-200 rounded-md text-lg text-gray-700 truncate">
+                        {complaint.specialty || "Auto"}
+                      </div>
+                    </div>
+
+                    {/* Delete Action */}
+                    <div className="col-span-1 flex justify-center">
+                      <button
+                        onClick={() => removeComplaint(complaint.id)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Delete */}
-                  <div className="col-span-1 flex justify-end">
-                    <button
-                      onClick={() => removeComplaint(complaint.id)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  {/* Red Flag Alert */}
+                  {/* Red Flag Alert Row */}
                   {complaint.redFlagTriggered && (
-                    <div className="col-span-12 mt-2">
-                      <div className="flex items-center bg-red-100 text-red-800 p-2 rounded-md text-lg font-semibold">
-                        <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
-                        🚨 RED FLAG: Severe {complaint.complaint.toLowerCase()}{" "}
-                        requires immediate attention!
-                      </div>
+                    <div className="mt-2 flex items-center bg-red-100 text-red-800 p-2 rounded-md text-lg font-semibold">
+                      <AlertTriangle className="w-4 h-4 mr-2 flex-shrink-0" />
+                      🚨 RED FLAG: Severe {complaint.complaint.toLowerCase()}{" "}
+                      requires immediate attention!
                     </div>
                   )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
