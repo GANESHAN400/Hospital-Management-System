@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useMemo,
   useState,
+  useRef, // Import useRef
 } from "react";
 import {
   Activity,
@@ -305,6 +306,9 @@ export const VitalsAssessment: React.FC<VitalsAssessmentProps> = ({
   const [aiSummary, setAiSummary] = useState("");
   const [isAiLoading, setIsAiLoading] = useState(false);
 
+  // Ref for focusing the diastolic input automatically
+  const diastolicInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const heightM = parseFloat(vitals.height) / 100;
     const weightKg = parseFloat(vitals.weight);
@@ -374,10 +378,39 @@ export const VitalsAssessment: React.FC<VitalsAssessmentProps> = ({
     return null;
   }, [vitals.bmi, getBMICategory]);
 
+  // --- MODIFIED INPUT HANDLER FOR BP ---
   const handleVitalChange = useCallback(
     (field: keyof VitalsState, value: string) => {
-      let sanitizedValue = value;
+      // 1. SPECIAL HANDLING: BP Systolic (Allow "/" for splitting and focusing)
+      if (field === "bpSystolic" && value.includes("/")) {
+        const parts = value.split("/");
+        // Update Systolic (first part)
+        dispatch({
+          type: ACTIONS.UPDATE_VITAL,
+          payload: {
+            field: "bpSystolic",
+            value: parts[0].replace(/[^0-9]/g, ""),
+          },
+        });
+        // Update Diastolic (second part) if exists
+        if (parts.length > 1) {
+          dispatch({
+            type: ACTIONS.UPDATE_VITAL,
+            payload: {
+              field: "bpDiastolic",
+              value: parts[1].replace(/[^0-9]/g, ""),
+            },
+          });
+        }
+        // Programmatically move focus to the diastolic input
+        if (diastolicInputRef.current) {
+          diastolicInputRef.current.focus();
+        }
+        return; // Stop further processing
+      }
 
+      // 2. Standard Sanitization for numeric fields
+      let sanitizedValue = value;
       if (
         [
           "weight",
@@ -697,7 +730,9 @@ export const VitalsAssessment: React.FC<VitalsAssessmentProps> = ({
           </div>
         )}
 
+        {/* Vitals Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-6">
+          {/* Row 1 */}
           <VitalCard
             title="Weight"
             value={vitals.weight}
@@ -765,37 +800,30 @@ export const VitalsAssessment: React.FC<VitalsAssessmentProps> = ({
             )}
           />
 
-          <VitalCard
-            title="BP Systolic"
-            value={vitals.bpSystolic}
-            unit="mmHg"
-            icon={Heart}
-            field="bpSystolic"
+          {/* Row 2 */}
+          <BPVitalCard
+            systolic={vitals.bpSystolic}
+            diastolic={vitals.bpDiastolic}
             onChange={handleVitalChange}
-            error={status.validationErrors.bpSystolic}
-            category={getVitalCategory(
+            errors={{
+              systolic: status.validationErrors.bpSystolic,
+              diastolic: status.validationErrors.bpDiastolic,
+            }}
+            sysCategory={getVitalCategory(
               parseFloat(vitals.bpSystolic),
               90,
               140,
               160,
               160
             )}
-          />
-          <VitalCard
-            title="BP Diastolic"
-            value={vitals.bpDiastolic}
-            unit="mmHg"
-            icon={Heart}
-            field="bpDiastolic"
-            onChange={handleVitalChange}
-            error={status.validationErrors.bpDiastolic}
-            category={getVitalCategory(
+            diaCategory={getVitalCategory(
               parseFloat(vitals.bpDiastolic),
               null,
               90,
               100,
               100
             )}
+            diastolicRef={diastolicInputRef} // Pass the ref here
           />
           <MAPResultCard map={vitals.map} />
 
@@ -839,6 +867,7 @@ export const VitalsAssessment: React.FC<VitalsAssessmentProps> = ({
           />
         </div>
 
+        {/* GCS Fields */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
           <h3 className="text-lg font-semibold text-[#0B2D4D] mb-4 flex items-center space-x-2">
             <Droplet className="w-5 h-5 text-[#012e58]" />
@@ -999,6 +1028,8 @@ export const VitalsAssessment: React.FC<VitalsAssessmentProps> = ({
   );
 };
 
+// --- SUB-COMPONENTS ---
+
 const VitalCard: React.FC<{
   title: string;
   value: string;
@@ -1076,6 +1107,97 @@ const VitalCard: React.FC<{
           <span className="text-md text-red-600 flex items-center gap-1 font-medium">
             <AlertCircle size={12} />
             {error}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// New Combined BP Card
+const BPVitalCard: React.FC<{
+  systolic: string;
+  diastolic: string;
+  onChange: (field: keyof VitalsState, value: string) => void;
+  errors: { systolic?: string; diastolic?: string };
+  sysCategory: { color: string; label: string };
+  diaCategory: { color: string; label: string };
+  diastolicRef?: React.RefObject<HTMLInputElement>; // NEW Prop
+}> = ({
+  systolic,
+  diastolic,
+  onChange,
+  errors,
+  sysCategory,
+  diaCategory,
+  diastolicRef,
+}) => {
+  let label = "";
+  let colorClass = "bg-gray-100 text-gray-600 border-gray-200";
+
+  if (sysCategory.label === "Critical" || diaCategory.label === "Critical") {
+    label = "Critical";
+    colorClass = "bg-red-100 text-red-700 border-red-200";
+  } else if (
+    sysCategory.label === "Warning" ||
+    diaCategory.label === "Warning"
+  ) {
+    label = "Warning";
+    colorClass = "bg-yellow-100 text-yellow-700 border-yellow-200";
+  } else if (sysCategory.label === "Normal" && diaCategory.label === "Normal") {
+    label = "Normal";
+    colorClass = "bg-green-100 text-green-700 border-green-200";
+  }
+
+  const hasError = !!errors.systolic || !!errors.diastolic;
+
+  return (
+    <div
+      className={`bg-white rounded-lg border p-4 transition-all relative ${
+        hasError ? "border-red-400 shadow-sm shadow-red-100" : "border-gray-200"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <Heart className="w-5 h-5 text-[#012e58]" />
+          <h3 className="font-medium text-[#0B2D4D]">Blood Pressure</h3>
+        </div>
+        {label && (
+          <span
+            className={`px-2 py-0.5 text-md font-semibold rounded-full border ${colorClass}`}
+          >
+            {label}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-baseline relative">
+        <input
+          type="text"
+          value={systolic}
+          onChange={(e) => onChange("bpSystolic", e.target.value)}
+          className="w-16 text-3xl font-bold text-[#0B2D4D] bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-right"
+          placeholder="---"
+        />
+        <span className="text-3xl text-gray-400 font-light mx-1">/</span>
+        <input
+          ref={diastolicRef} // Attach ref here
+          type="text"
+          value={diastolic}
+          onChange={(e) => onChange("bpDiastolic", e.target.value)}
+          className="w-16 text-3xl font-bold text-[#0B2D4D] bg-transparent border-0 p-0 focus:ring-0 focus:outline-none"
+          placeholder="---"
+        />
+        <span className="absolute right-0 top-1/2 -translate-y-1/2 text-lg text-gray-500">
+          mmHg
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between mt-2 h-4">
+        {hasError && (
+          <span className="text-md text-red-600 flex items-center gap-1 font-medium">
+            <AlertCircle size={12} />
+            {errors.systolic || errors.diastolic}
           </span>
         )}
       </div>
